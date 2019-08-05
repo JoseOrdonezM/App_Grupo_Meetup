@@ -1,0 +1,77 @@
+/**
+ * Grupos de meetup y faltas de asistencias.
+ * @author The SVQJUG team.
+ */
+entity Personas {
+	id Integer required,
+    name String,
+    email String required,
+    phoneNumber String,
+    picture ImageBlob,// default null
+    director Boolean,
+    banned Boolean,
+    dateBanned LocalDate // default null
+}
+
+entity Directores {
+	id Integer required,
+    idGroup Integer
+}
+
+entity GruposMeetup {
+	idGroup Integer required,
+	titleGroup String required,
+    dateCreation LocalDate, // not null
+    idDirectors String // not null
+}
+
+entity Eventos {
+	idEvent Integer required,
+    titleEvent String required,
+    idGroup Integer,
+    dateEventCreation LocalDate, // not null
+    eventDone Boolean,
+    dateEventRealization LocalDate, // default null
+    idWillAssist String, // default null
+    idAssisted String // default null
+}
+
+entity Asistencias {
+	titleEvent String required,
+	idAssisted String, // default null
+    idWarning String // default null
+}
+
+relationship ManyToOne {
+	Personas{id(name)} to Directores{id(idGroup) required}
+    //Directores autorizados a banear
+}
+
+relationship OneToMany {
+	Eventos{idEvent(idAssisted)} to Asistencias{titleEvent(idAssisted)}
+    //Cada Evento de cada GrupoMeetup tendrá una Asistencia y Personas con Warning (faltas) a las que se le baneará llegado un número de faltas
+}
+    
+relationship ManyToMany {
+	Directores{id(name)} to GruposMeetup{idGroup(titleGroup)},
+    //Directores de uno o más GruposMeetup
+    Personas{id} to Eventos{idEvent(titleEvent)},
+    //Personas(cualquier ser) que SE APUNTAN a Eventos
+    Eventos{idEvent(titleEvent)} to GruposMeetup{idGroup}
+    //Cada Evento de cada GrupoMeetup
+}
+
+
+// Set pagination options
+paginate Eventos, Asistencias with infinite-scroll
+paginate Personas, Directores with pagination
+
+// Use Data Transfert Objects (DTO)
+// dto * with mapstruct
+
+// Set service options to all except few
+service all with serviceImpl except Personas, Directores, GruposMeetup
+service GruposMeetup with serviceClass
+
+// Set an angular suffix
+// angularSuffix * with mySuffix
